@@ -1,0 +1,4 @@
+keypem/*
+pgadmin/data/*
+postgres/data/*
+superset/data/*

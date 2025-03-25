@@ -1,0 +1,95 @@
+version: "3.3"
+services:
+  pgadmin:
+    image: dpage/pgadmin4:latest
+    container_name: pgadmin
+    ports:
+      - "9090:80"
+    environment:
+      PGADMIN_DEFAULT_EMAIL: admin@example.com
+      PGADMIN_DEFAULT_PASSWORD: admin
+    volumes:
+      - ./pgadmin/data:/var/lib/pgadmin
+    restart: unless-stopped
+    healthcheck:
+      test: bash -c "exec 6<> /dev/tcp/localhost/80"
+    networks:
+      - trino-net
+  
+  postgres:
+    image: postgres:15.1
+    container_name: postgres
+    ports:
+      - "5432:5432"
+    environment:
+      POSTGRES_USER: trino
+      POSTGRES_PASSWORD: trino
+      POSTGRES_DB: trinodb
+    volumes:
+      - ./postgres/data:/var/lib/postgresql/data
+    healthcheck:
+      test: bash -c "exec 6<> /dev/tcp/localhost/5432"
+    networks:
+      - trino-net
+
+  coordinator:
+    image: trino:472 # Use the image name from your Dockerfile.  Or build from the local Dockerfile:  `build: .`
+    build:
+      context: ./trino
+      dockerfile: Dockerfile
+    container_name: coordinator
+    ports:
+      - "8080:8080"  # HTTP
+      - "8443:8443"  # HTTPS
+    volumes:
+      - ./trino/config/coordinator/config.properties:/etc/trino/config.properties
+      - ./trino/config/coordinator/jvm.config:/etc/trino/jvm.config
+      - ./trino/config/coordinator/node.properties:/etc/trino/node.properties
+      # - ./trino/config/coordinator/access-control.properties:/etc/trino/access-control.properties
+      - ./trino/config/coordinator/password-authenticator.properties:/etc/trino/password-authenticator.properties
+      # - ./trino/config/coordinator/keystore.jks:/etc/trino/tls/keystore.jks
+      # - ./keypem/keystore.jks:/etc/trino/tls/keystore.jks
+      - ./keypem:/etc/trino/tls
+      - ./trino/config/access-control/access-control.json:/etc/trino/access-control/access-control.json
+      - ./trino/config/password/password.db:/etc/trino/password/password.db
+      - ./trino/config/catalog:/etc/trino/catalog
+    healthcheck:
+      test: bash -c "exec 6<> /dev/tcp/localhost/8080"
+    networks:
+      - trino-net
+
+  # worker1:
+  #   image: trino:472 # Use the image name from your Dockerfile. Or build from the local Dockerfile:  `build: .`
+  #   build:
+  #     context: .
+  #     dockerfile: Dockerfile
+  #   container_name: worker1
+  #   volumes:
+  #     - ./config/worker/config.properties:/etc/trino/config.properties
+  #     - ./config/worker/jvm.config:/etc/trino/jvm.config
+  #     - ./config/worker/node.properties:/etc/trino/node.properties
+  #     - ./config/coordinator/keystore.jks:/etc/trino/tls/keystore.jks  # Shared keystore!
+  #   networks:
+  #     - trino-net
+  #   depends_on:
+  #     - coordinator
+
+  superset:
+    image: superset:4.1.1
+    build:
+      context: ./superset
+      dockerfile: Dockerfile
+    container_name: superset
+    ports:
+      - "8088:8088"
+    volumes:
+      - ./superset/data:/app/superset_home
+    restart: unless-stopped
+    healthcheck:
+      test: bash -c "exec 6<> /dev/tcp/localhost/8088"
+    networks:
+      - trino-net
+
+networks:
+  trino-net:
+    driver: bridge

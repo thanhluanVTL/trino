@@ -1,0 +1,16 @@
+trino-cluster/
+├── config/
+│   ├── coordinator/
+│   │   ├── config.properties
+│   │   ├── jvm.config
+│   │   └── node.properties
+│   ├── password/
+│   │   └── password.db
+│   ├── access-control/
+│   │   └── access-control.json
+│   └── worker/
+│       ├── config.properties
+│       ├── jvm.config
+│       └── node.properties
+├── docker-compose.yml
+└── Dockerfile.trino
