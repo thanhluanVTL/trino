@@ -44,8 +44,6 @@ docker-compose up --build
     trino://${username}:${password}@${trino_domain}:8443/${catalog}/${schema}
     ```
 
-    *Replace placeholder with your credentials*
-
 5.  **Test the Connection:** Click the "Test Connection" button.
 
 6.  **Save the Database Connection:** Click "Save".
