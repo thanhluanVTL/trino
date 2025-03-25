@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 echo "LUANVT"
 
-MAIN_DIR=/security
+MAIN_DIR=/apps/security
 
 echo "============================ Remove All Existing Files ============================"
 rm -rf ${MAIN_DIR}/*
@@ -55,3 +55,7 @@ ls -l ${PRIVATE_KEY_FILE_PATH}
 
 chmod 777 -R ${MAIN_DIR}/
 ls -l ${MAIN_DIR}/
+
+
+echo "============================ Start API Service ============================"
+exec python3 main.py
