@@ -1,39 +1,49 @@
 version: "3.3"
 services:
-  pgadmin:
-    image: dpage/pgadmin4:latest
-    container_name: pgadmin
-    ports:
-      - "9090:80"
-    environment:
-      PGADMIN_DEFAULT_EMAIL: admin@example.com
-      PGADMIN_DEFAULT_PASSWORD: admin
+  init-security:
+    image: trino-superset-cluster-init:latest
+    build:
+      context: ./init-security
+      dockerfile: Dockerfile
+    env_file:
+      - ./init-security/.env
     volumes:
-      - ./pgadmin/data:/var/lib/pgadmin
-    restart: unless-stopped
-    healthcheck:
-      test: bash -c "exec 6<> /dev/tcp/localhost/80"
-    networks:
-      - trino-net
+      - ./init-security/key:/security
+
+  # pgadmin:
+  #   image: dpage/pgadmin4:latest
+  #   container_name: pgadmin
+  #   ports:
+  #     - "9090:80"
+  #   environment:
+  #     PGADMIN_DEFAULT_EMAIL: admin@example.com
+  #     PGADMIN_DEFAULT_PASSWORD: admin
+  #   volumes:
+  #     - ./pgadmin/data:/var/lib/pgadmin
+  #   restart: unless-stopped
+  #   healthcheck:
+  #     test: bash -c "exec 6<> /dev/tcp/localhost/80"
+  #   networks:
+  #     - trino-net
   
-  postgres:
-    image: postgres:15.1
-    container_name: postgres
-    ports:
-      - "5432:5432"
-    environment:
-      POSTGRES_USER: trino
-      POSTGRES_PASSWORD: trino
-      POSTGRES_DB: trinodb
-    volumes:
-      - ./postgres/data:/var/lib/postgresql/data
-    healthcheck:
-      test: bash -c "exec 6<> /dev/tcp/localhost/5432"
-    networks:
-      - trino-net
+  # postgres:
+  #   image: postgres:15.1
+  #   container_name: postgres
+  #   ports:
+  #     - "5432:5432"
+  #   environment:
+  #     POSTGRES_USER: trino
+  #     POSTGRES_PASSWORD: trino
+  #     POSTGRES_DB: trinodb
+  #   volumes:
+  #     - ./postgres/data:/var/lib/postgresql/data
+  #   healthcheck:
+  #     test: bash -c "exec 6<> /dev/tcp/localhost/5432"
+  #   networks:
+  #     - trino-net
 
   coordinator:
-    image: trino:472 # Use the image name from your Dockerfile.  Or build from the local Dockerfile:  `build: .`
+    image: trino:472
     build:
       context: ./trino
       dockerfile: Dockerfile
@@ -49,30 +59,34 @@ services:
       - ./trino/config/coordinator/password-authenticator.properties:/etc/trino/password-authenticator.properties
       # - ./trino/config/coordinator/keystore.jks:/etc/trino/tls/keystore.jks
       # - ./keypem/keystore.jks:/etc/trino/tls/keystore.jks
-      - ./keypem:/etc/trino/tls
+      # - ./keypem:/etc/trino/tls
+      - ./init-security/key/keystore.jks:/etc/trino/tls/keystore.jks
       - ./trino/config/access-control/access-control.json:/etc/trino/access-control/access-control.json
       - ./trino/config/password/password.db:/etc/trino/password/password.db
       - ./trino/config/catalog:/etc/trino/catalog
     healthcheck:
       test: bash -c "exec 6<> /dev/tcp/localhost/8080"
+    depends_on:
+      init-security:
+        condition: service_completed_successfully
     networks:
       - trino-net
 
-  # worker1:
-  #   image: trino:472 # Use the image name from your Dockerfile. Or build from the local Dockerfile:  `build: .`
-  #   build:
-  #     context: .
-  #     dockerfile: Dockerfile
-  #   container_name: worker1
-  #   volumes:
-  #     - ./config/worker/config.properties:/etc/trino/config.properties
-  #     - ./config/worker/jvm.config:/etc/trino/jvm.config
-  #     - ./config/worker/node.properties:/etc/trino/node.properties
-  #     - ./config/coordinator/keystore.jks:/etc/trino/tls/keystore.jks  # Shared keystore!
-  #   networks:
-  #     - trino-net
-  #   depends_on:
-  #     - coordinator
+  # # worker1:
+  # #   image: trino:472 # Use the image name from your Dockerfile. Or build from the local Dockerfile:  `build: .`
+  # #   build:
+  # #     context: .
+  # #     dockerfile: Dockerfile
+  # #   container_name: worker1
+  # #   volumes:
+  # #     - ./config/worker/config.properties:/etc/trino/config.properties
+  # #     - ./config/worker/jvm.config:/etc/trino/jvm.config
+  # #     - ./config/worker/node.properties:/etc/trino/node.properties
+  # #     - ./config/coordinator/keystore.jks:/etc/trino/tls/keystore.jks  # Shared keystore!
+  # #   networks:
+  # #     - trino-net
+  # #   depends_on:
+  # #     - coordinator
 
   superset:
     image: superset:4.1.1
@@ -84,9 +98,13 @@ services:
       - "8088:8088"
     volumes:
       - ./superset/data:/app/superset_home
+      - ./init-security/key/trino.cert.pem:/usr/local/lib/python3.10/site-packages/certifi/trino.cert.pem
     restart: unless-stopped
     healthcheck:
       test: bash -c "exec 6<> /dev/tcp/localhost/8088"
+    depends_on:
+      init-security:
+        condition: service_completed_successfully
     networks:
       - trino-net
 
