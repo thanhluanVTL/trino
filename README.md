@@ -1,5 +1,5 @@
 ```markdown
-# Trino and Superset with SSL Connection (Non-Production)
+## Trino and Superset with SSL Connection
 ```
 
 ## Step 1: Change .env file for Init Security
@@ -11,8 +11,8 @@
 2.  **Access the Superset container:**
     ```bash
     nano .env
+    # Edit STOREPASS, KEYPASS, TRINO_DOMAIN value
     ```
-  Change STOREPASS, KEYPASS, TRINO_DOMAIN value
 
 ## Step 2: Run docker-compose.yml
 
