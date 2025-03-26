@@ -1,6 +1,7 @@
 ```markdown
 ## Trino and Superset with SSL Connection
 ```
+
 ## Step 1: Create addtional mount data folders
     ```bash
     mkdir -p data/pgadmin data/postgres data/superset
@@ -27,6 +28,7 @@
     cd superset
     nano .env
     # Then change SUPERSET_PORT and KEY_PROVIDER_URL value
+    ```
 
 ## Step 3: Run docker-compose.yml
 
