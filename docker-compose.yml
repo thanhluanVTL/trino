@@ -59,14 +59,19 @@ services:
       - "8080:8080"  # HTTP
       - "8443:8443"  # HTTPS
     volumes:
-      - ./trino/config/coordinator/config.properties:/etc/trino/config.properties
-      - ./trino/config/coordinator/jvm.config:/etc/trino/jvm.config
-      - ./trino/config/coordinator/node.properties:/etc/trino/node.properties
-      # - ./trino/config/coordinator/access-control.properties:/etc/trino/access-control.properties
-      - ./trino/config/coordinator/password-authenticator.properties:/etc/trino/password-authenticator.properties
-      - ./trino/config/access-control/access-control.json:/etc/trino/access-control/access-control.json
-      - ./trino/config/password/password.db:/etc/trino/password/password.db
-      - ./trino/config/catalog:/etc/trino/catalog
+      # main config
+      - ./trino/config/coordinator/main/config.properties:/etc/trino/config.properties
+      - ./trino/config/coordinator/main/jvm.config:/etc/trino/jvm.config
+      - ./trino/config/coordinator/main/node.properties:/etc/trino/node.properties
+      - ./trino/config/coordinator/main/password-authenticator.properties:/etc/trino/password-authenticator.properties
+      # - ./trino/config/coordinator/main/access-control.properties:/etc/trino/access-control.properties
+
+      # access control
+      - ./trino/config/coordinator/access-control/access-control.json:/etc/trino/access-control/access-control.json
+      # password
+      - ./trino/config/coordinator/password/password.db:/etc/trino/password/password.db
+      # catalog
+      - ./trino/config/coordinator/catalog:/etc/trino/catalog
     healthcheck:
       test: bash -c "exec 6<> /dev/tcp/localhost/8080"
     depends_on:

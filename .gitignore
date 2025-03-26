@@ -1,3 +1,6 @@
 data/pgadmin/*
 data/postgres/*
 data/superset/*
+!data/pgadmin/
+!data/postgres/
+!data/superset/
