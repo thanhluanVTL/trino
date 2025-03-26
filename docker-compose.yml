@@ -1,15 +1,19 @@
 version: "3.3"
 services:
-  init-security:
-    image: trino-superset-cluster-init:latest
+  key-provider:
+    image: key-provider:latest
     build:
-      context: ./init-security
+      context: ./key-provider
       dockerfile: Dockerfile
-    container_name: init-security
+    container_name: key-provider
     env_file:
-      - ./init-security/.env
+      - ./key-provider/.env
     ports:
       - "9000:8000"
+    healthcheck:
+      test: bash -c "exec 6<> /dev/tcp/localhost/8000"
+    networks:
+      - trino-net
 
 #   pgadmin:
 #     image: dpage/pgadmin4:latest
@@ -43,72 +47,75 @@ services:
 #     networks:
 #       - trino-net
 
-#   coordinator:
-#     image: trino:472
-#     build:
-#       context: ./trino
-#       dockerfile: Dockerfile
-#     container_name: coordinator
-#     ports:
-#       - "8080:8080"  # HTTP
-#       - "8443:8443"  # HTTPS
-#     volumes:
-#       - ./trino/config/coordinator/config.properties:/etc/trino/config.properties
-#       - ./trino/config/coordinator/jvm.config:/etc/trino/jvm.config
-#       - ./trino/config/coordinator/node.properties:/etc/trino/node.properties
-#       # - ./trino/config/coordinator/access-control.properties:/etc/trino/access-control.properties
-#       - ./trino/config/coordinator/password-authenticator.properties:/etc/trino/password-authenticator.properties
-#       # - ./trino/config/coordinator/keystore.jks:/etc/trino/tls/keystore.jks
-#       # - ./keypem/keystore.jks:/etc/trino/tls/keystore.jks
-#       # - ./keypem:/etc/trino/tls
-#       - ./init-security/key/keystore.jks:/etc/trino/tls/keystore.jks
-#       - ./trino/config/access-control/access-control.json:/etc/trino/access-control/access-control.json
-#       - ./trino/config/password/password.db:/etc/trino/password/password.db
-#       - ./trino/config/catalog:/etc/trino/catalog
-#     healthcheck:
-#       test: bash -c "exec 6<> /dev/tcp/localhost/8080"
-#     depends_on:
-#       init-security:
-#         condition: service_completed_successfully
-#     networks:
-#       - trino-net
+  coordinator:
+    image: trino:472
+    build:
+      context: ./trino
+      dockerfile: Dockerfile
+    container_name: coordinator
+    env_file:
+      - ./trino/.env
+    ports:
+      - "8080:8080"  # HTTP
+      - "8443:8443"  # HTTPS
+    volumes:
+      - ./trino/config/coordinator/config.properties:/etc/trino/config.properties
+      - ./trino/config/coordinator/jvm.config:/etc/trino/jvm.config
+      - ./trino/config/coordinator/node.properties:/etc/trino/node.properties
+      # - ./trino/config/coordinator/access-control.properties:/etc/trino/access-control.properties
+      - ./trino/config/coordinator/password-authenticator.properties:/etc/trino/password-authenticator.properties
+      # - ./trino/config/coordinator/keystore.jks:/etc/trino/tls/keystore.jks
+      # - ./keypem/keystore.jks:/etc/trino/tls/keystore.jks
+      # - ./keypem:/etc/trino/tls
+      # - ./key-provider/key/keystore.jks:/etc/trino/tls/keystore.jks
+      - ./trino/config/access-control/access-control.json:/etc/trino/access-control/access-control.json
+      - ./trino/config/password/password.db:/etc/trino/password/password.db
+      - ./trino/config/catalog:/etc/trino/catalog
+    healthcheck:
+      test: bash -c "exec 6<> /dev/tcp/localhost/8080"
+    depends_on:
+      key-provider:
+        condition: service_healthy
+    networks:
+      - trino-net
 
-#   # # worker1:
-#   # #   image: trino:472 # Use the image name from your Dockerfile. Or build from the local Dockerfile:  `build: .`
-#   # #   build:
-#   # #     context: .
-#   # #     dockerfile: Dockerfile
-#   # #   container_name: worker1
-#   # #   volumes:
-#   # #     - ./config/worker/config.properties:/etc/trino/config.properties
-#   # #     - ./config/worker/jvm.config:/etc/trino/jvm.config
-#   # #     - ./config/worker/node.properties:/etc/trino/node.properties
-#   # #     - ./config/coordinator/keystore.jks:/etc/trino/tls/keystore.jks  # Shared keystore!
-#   # #   networks:
-#   # #     - trino-net
-#   # #   depends_on:
-#   # #     - coordinator
+  # # # worker1:
+  # # #   image: trino:472 # Use the image name from your Dockerfile. Or build from the local Dockerfile:  `build: .`
+  # # #   build:
+  # # #     context: .
+  # # #     dockerfile: Dockerfile
+  # # #   container_name: worker1
+  # # #   volumes:
+  # # #     - ./config/worker/config.properties:/etc/trino/config.properties
+  # # #     - ./config/worker/jvm.config:/etc/trino/jvm.config
+  # # #     - ./config/worker/node.properties:/etc/trino/node.properties
+  # # #     - ./config/coordinator/keystore.jks:/etc/trino/tls/keystore.jks  # Shared keystore!
+  # # #   networks:
+  # # #     - trino-net
+  # # #   depends_on:
+  # # #     - coordinator
 
-#   superset:
-#     image: superset:4.1.1
-#     build:
-#       context: ./superset
-#       dockerfile: Dockerfile
-#     container_name: superset
-#     ports:
-#       - "8088:8088"
-#     volumes:
-#       - ./superset/data:/app/superset_home
-#       - ./init-security/key/trino.cert.pem:/usr/local/lib/python3.10/site-packages/certifi/trino.cert.pem
-#     restart: unless-stopped
-#     healthcheck:
-#       test: bash -c "exec 6<> /dev/tcp/localhost/8088"
-#     depends_on:
-#       init-security:
-#         condition: service_completed_successfully
-#     networks:
-#       - trino-net
+  superset:
+    image: superset:4.1.1
+    build:
+      context: ./superset
+      dockerfile: Dockerfile
+    container_name: superset
+    env_file:
+      - ./superset/.env
+    ports:
+      - "8088:8088"
+    volumes:
+      - ./superset/data:/app/superset_home
+    restart: unless-stopped
+    healthcheck:
+      test: bash -c "exec 6<> /dev/tcp/localhost/8088"
+    depends_on:
+      key-provider:
+        condition: service_healthy
+    networks:
+      - trino-net
 
-# networks:
-#   trino-net:
-#     driver: bridge
+networks:
+  trino-net:
+    driver: bridge

@@ -1,5 +1,44 @@
 #!/usr/bin/env bash
-echo "LUANVT"
+
+# Set -e to exit immediately if a command exits with a non-zero status
+set -e
+
+echo "============================ Check Environment Variables ============================"
+# Function to check if an environment variable is set and append to missing_vars if not
+check_env_var() {
+  local var_name="$1"
+  if [[ -z "${!var_name}" ]]; then
+    missing_vars+=("$var_name")  # Append the missing variable to the array
+  fi
+}
+
+# Array of required environment variables
+required_vars=(
+  "STOREPASS"
+  "KEYPASS"
+  "TRINO_DOMAIN"
+)
+
+# Array to store the names of missing environment variables
+missing_vars=()
+
+# Loop through the required variables and check if they are set
+echo "Checking required environment variables ..."
+for var in "${required_vars[@]}"; do
+  check_env_var "$var"
+done
+
+# Check if any variables are missing
+if [[ ${#missing_vars[@]} -gt 0 ]]; then
+  echo "Error: The following required environment variables are not set:"
+  for var in "${missing_vars[@]}"; do
+    echo "  - $var"
+  done
+  exit 1  # Exit with a non-zero status code
+fi
+
+echo "All required environment variables are set."
+
 
 MAIN_DIR=/apps/security
 
