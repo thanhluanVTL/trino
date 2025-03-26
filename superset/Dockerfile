@@ -51,7 +51,9 @@ COPY requirements.txt requirements.txt
 RUN pip install -r requirements.txt
 
 # Certificate
-RUN chmod 777 /usr/local/lib/python3.10/site-packages/certifi/cacert.pem
+RUN cp /usr/local/lib/python3.10/site-packages/certifi/cacert.pem /usr/local/lib/python3.10/site-packages/certifi/cacert.pem.bku \
+&& chown superset:superset /usr/local/lib/python3.10/site-packages/certifi/cacert.pem /usr/local/lib/python3.10/site-packages/certifi/cacert.pem.bku \
+&& chmod 777 /usr/local/lib/python3.10/site-packages/certifi/cacert.pem /usr/local/lib/python3.10/site-packages/certifi/cacert.pem.bku
 
 # Create folder to save certificate file
 RUN mkdir -p /app/security && chown superset:superset /app/security

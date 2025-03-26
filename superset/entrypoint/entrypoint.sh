@@ -113,7 +113,12 @@ else
   exit 1
 fi
 
+BACKUP_CERTIFICATE_FILE=/usr/local/lib/python3.10/site-packages/certifi/cacert.pem.bku
 MAIN_CERTIFICATE_FILE=/usr/local/lib/python3.10/site-packages/certifi/cacert.pem
+
+echo "======================================= Copy Certificate Template ======================================="
+cp -f $BACKUP_CERTIFICATE_FILE $MAIN_CERTIFICATE_FILE
+chmod 777 $MAIN_CERTIFICATE_FILE
 
 echo "======================================= Insert Certificate ======================================="
 cat $OUTPUT_DIR/$FILE_NAME >> $MAIN_CERTIFICATE_FILE
