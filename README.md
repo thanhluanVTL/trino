@@ -1,26 +1,44 @@
 ```markdown
 ## Trino and Superset with SSL Connection
 ```
-
-## Step 1: Change .env file for Init Security
-1.  **Access the Superset container:**
+## Step 1: Create addtional mount data folders
     ```bash
-    cd init-security
+    mkdir -p data/pgadmin data/postgres data/superset
+    chmod 777 -R data/pgadmin data/postgres data/superset
     ```
 
-2.  **Access the Superset container:**
+## Step 2: Change .env files
+1.  **Go to key-provider folder and edit .env file:**
     ```bash
+    cd key-provider
     nano .env
-    # Edit STOREPASS, KEYPASS, TRINO_DOMAIN value
+    # Then change STOREPASS, KEYPASS, TRINO_DOMAIN value
     ```
 
-## Step 2: Run docker-compose.yml
+2.  **Go to trino folder and edit .env file:**
+    ```bash
+    cd trino
+    nano .env
+    # Then change KEY_PROVIDER_URL value
+    ```
+
+3.  **Go to superset folder and edit .env file:**
+    ```bash
+    cd superset
+    nano .env
+    # Then change SUPERSET_PORT and KEY_PROVIDER_URL value
+
+## Step 3: Run docker-compose.yml
 
   ```bash
-  docker-compose up --build
+  # Run with existing images on Docker Hub
+  docker-compose -f docker-compose-deploy.yml up -d
+
+  # Build images to run
+  docker-compose -f docker-compose-local.yml up -d --build
   ```
 
-## Step 3: Initialize Superset
+## Step 4: Initialize Superset
 
 1.  **Access the Superset container:**
 
@@ -36,7 +54,7 @@
     superset init
     ```
 
-## Step 4: Configure the Trino Connection in Superset
+## Step 5: Configure the Trino Connection in Superset
 
 1.  **Access Superset:** Open your web browser and go to `http://localhost:8088`. Log in as an administrator.
 

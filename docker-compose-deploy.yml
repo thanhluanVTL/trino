@@ -2,9 +2,6 @@ version: "3.3"
 services:
   key-provider:
     image: vuthanhluan/trino:key-provider
-    build:
-      context: ./key-provider
-      dockerfile: Dockerfile
     container_name: key-provider
     env_file:
       - ./key-provider/.env
@@ -49,9 +46,6 @@ services:
 
   trino-coordinator:
     image: vuthanhluan/trino:472
-    build:
-      context: ./trino
-      dockerfile: Dockerfile
     container_name: trino-coordinator
     env_file:
       - ./trino/.env
@@ -82,9 +76,6 @@ services:
 
   trino-worker1:
     image: vuthanhluan/trino:472
-    build:
-      context: ./trino
-      dockerfile: Dockerfile
     container_name: trino-worker1
     env_file:
       - ./trino/.env
@@ -103,9 +94,6 @@ services:
 
   superset:
     image: vuthanhluan/superset:4.1.1
-    build:
-      context: ./superset
-      dockerfile: Dockerfile
     container_name: superset
     env_file:
       - ./superset/.env
