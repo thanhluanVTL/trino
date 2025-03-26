@@ -13,7 +13,7 @@ services:
     healthcheck:
       test: bash -c "exec 6<> /dev/tcp/localhost/8000"
     networks:
-      - trino-net
+      - trino-cluster-net
 
 #   pgadmin:
 #     image: dpage/pgadmin4:latest
@@ -24,28 +24,28 @@ services:
 #       PGADMIN_DEFAULT_EMAIL: admin@example.com
 #       PGADMIN_DEFAULT_PASSWORD: admin
 #     volumes:
-#       - ./pgadmin/data:/var/lib/pgadmin
+#       - ./data/pgadmin:/var/lib/pgadmin
 #     restart: unless-stopped
 #     healthcheck:
 #       test: bash -c "exec 6<> /dev/tcp/localhost/80"
 #     networks:
-#       - trino-net
+#       - trino-cluster-net
   
-#   postgres:
-#     image: postgres:15.1
-#     container_name: postgres
-#     ports:
-#       - "5432:5432"
-#     environment:
-#       POSTGRES_USER: trino
-#       POSTGRES_PASSWORD: trino
-#       POSTGRES_DB: trinodb
-#     volumes:
-#       - ./postgres/data:/var/lib/postgresql/data
-#     healthcheck:
-#       test: bash -c "exec 6<> /dev/tcp/localhost/5432"
-#     networks:
-#       - trino-net
+  postgres:
+    image: postgres:15.1
+    container_name: postgres
+    ports:
+      - "5432:5432"
+    environment:
+      POSTGRES_USER: trino
+      POSTGRES_PASSWORD: trino
+      POSTGRES_DB: trinodb
+    volumes:
+      - ./data/postgres:/var/lib/postgresql/data
+    healthcheck:
+      test: bash -c "exec 6<> /dev/tcp/localhost/5432"
+    networks:
+      - trino-cluster-net
 
   coordinator:
     image: trino:472
@@ -64,10 +64,6 @@ services:
       - ./trino/config/coordinator/node.properties:/etc/trino/node.properties
       # - ./trino/config/coordinator/access-control.properties:/etc/trino/access-control.properties
       - ./trino/config/coordinator/password-authenticator.properties:/etc/trino/password-authenticator.properties
-      # - ./trino/config/coordinator/keystore.jks:/etc/trino/tls/keystore.jks
-      # - ./keypem/keystore.jks:/etc/trino/tls/keystore.jks
-      # - ./keypem:/etc/trino/tls
-      # - ./key-provider/key/keystore.jks:/etc/trino/tls/keystore.jks
       - ./trino/config/access-control/access-control.json:/etc/trino/access-control/access-control.json
       - ./trino/config/password/password.db:/etc/trino/password/password.db
       - ./trino/config/catalog:/etc/trino/catalog
@@ -77,7 +73,7 @@ services:
       key-provider:
         condition: service_healthy
     networks:
-      - trino-net
+      - trino-cluster-net
 
   # # # worker1:
   # # #   image: trino:472 # Use the image name from your Dockerfile. Or build from the local Dockerfile:  `build: .`
@@ -91,7 +87,7 @@ services:
   # # #     - ./config/worker/node.properties:/etc/trino/node.properties
   # # #     - ./config/coordinator/keystore.jks:/etc/trino/tls/keystore.jks  # Shared keystore!
   # # #   networks:
-  # # #     - trino-net
+  # # #     - trino-cluster-net
   # # #   depends_on:
   # # #     - coordinator
 
@@ -106,7 +102,7 @@ services:
     ports:
       - "8088:8088"
     volumes:
-      - ./superset/data:/app/superset_home
+      - ./data/superset:/app/superset_home
     restart: unless-stopped
     healthcheck:
       test: bash -c "exec 6<> /dev/tcp/localhost/8088"
@@ -114,8 +110,8 @@ services:
       key-provider:
         condition: service_healthy
     networks:
-      - trino-net
+      - trino-cluster-net
 
 networks:
-  trino-net:
+  trino-cluster-net:
     driver: bridge

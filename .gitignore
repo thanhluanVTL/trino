@@ -1,4 +1,3 @@
-pgadmin/data/*
-postgres/data/*
-superset/data/*
-init-security/key/*
+data/pgadmin/*
+data/postgres/*
+data/superset/*
