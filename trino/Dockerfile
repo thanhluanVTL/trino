@@ -1,5 +1,8 @@
 FROM trinodb/trino:472
 
+# USER root
+# RUN chmod 777 /usr/lib/jvm/temurin/jdk-23.0.2+7/lib/security/cacerts
+
 # USER trino
 
 # Create Trino config folders

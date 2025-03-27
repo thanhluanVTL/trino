@@ -96,8 +96,12 @@ services:
 
       # catalog
       - ./trino/config/worker/catalog:/etc/trino/catalog
+    ports:
+      - "8085:8080"
     networks:
       - trino-cluster-net
+    healthcheck:
+      test: bash -c "exec 6<> /dev/tcp/localhost/8080"
     depends_on:
       - trino-coordinator
 
